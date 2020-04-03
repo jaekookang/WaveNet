@@ -128,3 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 temp.py
+
+# Custom (2020-04-02 jaekoo)
+.DS_Store
+*~
+\#*

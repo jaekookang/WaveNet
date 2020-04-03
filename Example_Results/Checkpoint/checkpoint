@@ -1,0 +1,2 @@
+model_checkpoint_path: "S_100000.CHECKPOINT.H5-100"
+all_model_checkpoint_paths: "S_100000.CHECKPOINT.H5-100"

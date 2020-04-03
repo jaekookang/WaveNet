@@ -30,7 +30,7 @@
     },
 
     "Train": {
-        "Pattern_Path": "C:/Pattern/WN.Pattern.LJFV",
+        "Pattern_Path": "LJ_test",
         "Metadata_File": "METADATA.PICKLE",
         "Batch_Size": 16,
         "Wav_Length": 768,
@@ -51,9 +51,8 @@
         "Initial_Inference": false
     },
 
-
     "Use_Mixed_Precision": false,
-    "Inference_Path": "D:/WaveNet.LJFV.Results/Inference",
-    "Checkpoint_Path": "D:/WaveNet.LJFV.Results/Checkpoint",
+    "Inference_Path": "LJ_test/Inference",
+    "Checkpoint_Path": "Example_Results/Checkpoint",
     "Device": "0"
 }
