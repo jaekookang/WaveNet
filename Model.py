@@ -1,9 +1,14 @@
 # Refer:
 # https://https://github.com/fatchord/WaveRNN
 
+import os
+import re
+import pickle
+from shutil import copyfile
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 import numpy as np
+from glob import glob
 import json, os, time, argparse
 from threading import Thread
 import matplotlib
@@ -292,7 +297,43 @@ class WaveNet:
                 )
 
 if __name__ == '__main__':
-    new_Model = WaveNet(is_Training= True)
+    # Train
+    # new_Model = WaveNet(is_Training= True)
+    # new_Model.Restore()
+    # new_Model.Train()
 
-    new_Model.Restore()
-    new_Model.Train()
+    # Test
+    new_Model = WaveNet(is_Training=False)
+    new_Model.Restore('Example_Results/Checkpoint/S_100000.CHECKPOINT.H5-100')
+    
+    # 1. Run Pattern_Generate.py => Make PICKLE files
+    # 2. Copy wav files
+    pickles = sorted(glob(os.path.join('LJ_test/LJ*.PICKLE')))
+    wavs = [re.sub('.*.LJ.(LJ.*).PICKLE', r'\1', pckl)+'.wav' for pckl in pickles]
+    for wav in wavs:
+        copyfile(os.path.join('/home/zzandore/dataset/LJSpeech-1.1/wavs', wav),
+                 os.path.join('LJ_test', wav))
+
+    # 3. Prepare input
+    mel_List = []
+    mel_Speaker_List = []
+    for pckl in pickles:
+        with open(pckl, 'rb') as pkl:
+            P = pickle.load(pkl)
+        mel_List.append(P['Mel'])
+        mel_Speaker_List.append(P['Speaker_ID'])
+    path_List = [os.path.join('LJ_test', wav) for wav in wavs]
+    path_Speaker_List = mel_Speaker_List
+
+    new_Model.Inference(
+        mel_List=mel_List[0:2],
+        mel_Speaker_List=mel_Speaker_List[0:2],
+        wav_List=path_List[0:2],
+        wav_Speaker_List=path_Speaker_List[0:2],
+        label=None,
+        split_Mel_Window=7,
+        overlap_Window=1,
+        batch_Size=16
+    )
+    print('Done')
+

@@ -66,10 +66,13 @@ def Speaker_Index_Dict_Generate(lj, bc2013, fv):
     return speaker_Index_Dict
 
 
-def LJ_Info_Load(lj_Path):
+def LJ_Info_Load(lj_Path, n_sample=None):
     lj_File_Path_List = []
-
     for root, _, file_Name_List in os.walk(lj_Path):
+        if n_sample is not None:
+            idx = np.random.permutation(len(file_Name_List))[:n_sample]
+            file_Name_List = [file_Name_List[i] for i in idx]
+
         for file_Name in file_Name_List:
             wav_File_Path = os.path.join(root, file_Name).replace('\\', '/')
             if not os.path.splitext(wav_File_Path)[1].upper() in using_Extension:
@@ -176,7 +179,7 @@ if __name__ == '__main__':
     total_Pattern_Count = 0
 
     if not argument_Dict['lj_path'] is None:
-        lj_File_Path_List = LJ_Info_Load(lj_Path= argument_Dict['lj_path'])
+        lj_File_Path_List = LJ_Info_Load(lj_Path= argument_Dict['lj_path'], n_sample=10)
         total_Pattern_Count += len(lj_File_Path_List)
     if not argument_Dict['bc2013_path'] is None:
         bc2013_File_Path_List = BC2013_Info_Load(bc2013_Path= argument_Dict['bc2013_path'])
