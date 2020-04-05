@@ -1,5 +1,7 @@
 # Refer:
 # https://https://github.com/fatchord/WaveRNN
+#
+# 2020-04-05 jkang, personal notes
 
 import os
 import re
@@ -58,15 +60,15 @@ class WaveNet:
             dtype= tf.int32
             )        
 
-        layer_Dict['WaveRNN'] = Modules.WaveNet()        
-        layer_Dict['Loss'] = Modules.Loss()
+        layer_Dict['WaveRNN'] = Modules.WaveNet()  # <-- Init WaveNet  
+        layer_Dict['Loss'] = Modules.Loss()        # <-- Init Loss
         
-        tensor_Dict['Logits'], _ = layer_Dict['WaveRNN'](
+        tensor_Dict['Logits'], _ = layer_Dict['WaveRNN']( # <-- for training
             inputs= [input_Dict['Audio'][:, :-1], input_Dict['Mel'], input_Dict['Speaker']],
             training= True
             ) #Using audio is [:, :-1].
 
-        _, tensor_Dict['Samples'] = layer_Dict['WaveRNN'](
+        _, tensor_Dict['Samples'] = layer_Dict['WaveRNN']( # <-- for inference
             inputs= [input_Dict['Audio'], input_Dict['Mel'], input_Dict['Speaker']],
             training= False
             ) #Using audio is [:, :-1].

@@ -14,7 +14,7 @@ with open('Hyper_Parameters.json', 'r') as f:
 
 class WaveNet(tf.keras.Model):
     def build(self, input_shapes):
-        if hp_Dict['WaveNet']['Initial_Filters'] % 2 != 0:
+        if hp_Dict['WaveNet']['Initial_Filters'] % 2 != 0:  # 128*2=256
             raise ValueError('Initial filter must be a even.')
 
         self.layer_Dict = {}
@@ -22,7 +22,7 @@ class WaveNet(tf.keras.Model):
         self.layer_Dict['First'] = tf.keras.Sequential()
         self.layer_Dict['First'].add(tf.keras.layers.Lambda(
             lambda x: tf.expand_dims(x, axis= -1)
-            ))
+            )) # Add extra dim at axis=-1 (eg. (10,)=>(10,1))
         # self.layer_Dict['First'].add(tf.keras.layers.Conv1D(
         #     filters= hp_Dict['WaveNet']['Initial_Filters'],
         #     kernel_size= 1,
@@ -106,7 +106,7 @@ class WaveNet(tf.keras.Model):
             return self.inference(local_Conditions, global_Conditions)
             
 
-    def train(self, x, local_Conditions, global_Conditions):
+    def train(self, x, local_Conditions, global_Conditions): # -> out: logits, samples
         local_Conditions = self.layer_Dict['Local_Condition_Upsample'](local_Conditions)
         global_Conditions = self.layer_Dict['Global_Condition_Embedding'](global_Conditions)        
         x = self.layer_Dict['First'](inputs= x, training= tf.convert_to_tensor(True))
@@ -125,7 +125,7 @@ class WaveNet(tf.keras.Model):
         
         return logits, tf.zeros(shape=(tf.shape(logits)[0], 1), dtype= logits.dtype)
 
-    def inference(self, local_Conditions, global_Conditions):
+    def inference(self, local_Conditions, global_Conditions): # -> out: zeros, samples
         # Initialize
         self.layer_Dict['First'].layers[-1].inputs_initialize()
         for block_Index in range(hp_Dict['WaveNet']['ResConvGLU']['Blocks']):
@@ -430,12 +430,13 @@ class Incremental_Conv1D_Causal_WN(tf.keras.layers.Layer):
     def call(self, inputs, training):
         return tf.cond(
             pred= tf.convert_to_tensor(training),
-            true_fn= lambda: self.usual(inputs),
-            false_fn= lambda: self.incremental(inputs)
+            true_fn= lambda: self.usual(inputs), # if training
+            false_fn= lambda: self.incremental(inputs) # if NOT training
             )
 
-    def usual(self, inputs):
-        left_size = self.dilation_rate * (self.kernel_size - 1)
+    # -------------------- for training --------------------
+    def usual(self, inputs): 
+        left_size = self.dilation_rate * (self.kernel_size - 1) # 1*(3-1)=2
         padding = tf.zeros(
             shape=(
                 tf.shape(inputs)[0],
@@ -462,6 +463,7 @@ class Incremental_Conv1D_Causal_WN(tf.keras.layers.Layer):
 
         return outputs
 
+    # -------------------- for inference --------------------
     def incremental(self, inputs):
         self.previous_inputs.append(inputs)
 
