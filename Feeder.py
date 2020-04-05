@@ -49,7 +49,7 @@ class Feeder:
             'Pattern count: {}'.format(len(path_List))
             )
 
-        mel_Window = hp_Dict['Train']['Wav_Length'] // hp_Dict['Sound']['Frame_Shift'] + 2 * hp_Dict['WaveNet']['Upsample']['Pad']
+        mel_Window = hp_Dict['Train']['Wav_Length'] // hp_Dict['Sound']['Frame_Shift'] + 2 * hp_Dict['WaveNet']['Upsample']['Pad'] # 7
         while True:
             shuffle(path_List)            
             path_Batch_List = [
@@ -107,8 +107,8 @@ class Feeder:
         overlap_Window= 1,
         batch_Size= 16
         ):
-        split_Mel_Window += 2 * hp_Dict['WaveNet']['Upsample']['Pad']
-        overlap_Window += 2 * hp_Dict['WaveNet']['Upsample']['Pad']
+        split_Mel_Window += 2 * hp_Dict['WaveNet']['Upsample']['Pad'] # +4
+        overlap_Window += 2 * hp_Dict['WaveNet']['Upsample']['Pad'] # +4
 
         if wav_List is None and mel_List is None:
             print('One of paths must be not None.')
@@ -127,7 +127,7 @@ class Feeder:
             speaker_List.extend(wav_Speaker_List)
 
         split_Mel_Index_List = []
-        split_Mel_List = []
+        split_Mel_List = [] # len=38; [(11,80),(11,80),...(7,80)]
         split_Speaker_List = []
         for index, (mel, speaker) in enumerate(zip(mel_List, speaker_List)):
             mel = np.vstack([np.zeros(shape=(overlap_Window, mel.shape[1]), dtype= mel.dtype), mel])    # initial padding
@@ -143,10 +143,10 @@ class Feeder:
             split_Mel_List[-1] = np.vstack([
                 split_Mel_List[-1],
                 np.zeros(shape=(split_Mel_Window - split_Mel_List[-1].shape[0], mel.shape[1]), dtype= mel.dtype)
-                ])    # last padding
+                ])    # last padding +(4,80)
 
-        mel_Pattern = np.stack(split_Mel_List, axis= 0)
-        speaker_Pattern = np.array(split_Speaker_List).astype(np.int32)
+        mel_Pattern = np.stack(split_Mel_List, axis= 0) # (115,11,80)
+        speaker_Pattern = np.array(split_Speaker_List).astype(np.int32) # (115,)
 
         wav_List = [None] * len(mel_List)
         wav_List[-len(sig_List):] = sig_List
@@ -173,16 +173,21 @@ class Feeder:
 
 
 if __name__ == "__main__":
-    new_Feeder = Feeder(is_Training= True)
-
-    print(new_Feeder.Get_Inference_Pattern(
+    # For Inference
+    new_Feeder = Feeder(is_Training=False)
+    wav_List, pattern_Dict_List, split_Mel_Index_List = new_Feeder.Get_Inference_Pattern(
         wav_List= [
-            'D:/Pattern/ENG/LJSpeech/wavs/LJ050-0276.wav',
-            'D:/Pattern/ENG/FastVox/cmu_us_jmk_arctic/wav/arctic_a0012.wav',
+            'LJ_test/LJ002-0151.wav',
+            'LJ_test/LJ018-0078.wav',
             ],
-        wav_Speaker_List= [0, 4]
-        )[1])
+        wav_Speaker_List= [0, 0]
+        )
+
+    # For Training
+    new_Feeder = Feeder(is_Training=True)
+    new_Feeder.Pattern_Generate()
+    
     while True:
-        time.sleep(1.0)
-        # print(new_Feeder.Get_Pattern())
+        #time.sleep(1.0)
+        print(new_Feeder.Get_Pattern())
         assert False
